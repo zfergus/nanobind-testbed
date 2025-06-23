@@ -48,7 +48,14 @@ NB_MODULE(testbed, m)
     // B directly.
     nb::class_<D, C>(m, "D")
         .def(nb::init<int, int>())
+        // Inherited from B
         .def("foo", &D::foo)
         .def_rw("a", &D::a)
-        .def_rw("b", &D::b);
+        .def_rw("b", &D::b)
+        // Inherited from C
+        // NOTE: Normally, you would not need to redefine `bar` and `x` here,
+        // but since `D` is not a direct child of `B`, we need to explicitly
+        // rebind them to ensure they are accessible.
+        .def("bar", &D::bar)
+        .def_rw("x", &D::x);
 }
