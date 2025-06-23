@@ -1,21 +1,35 @@
 #include <nanobind/nanobind.h>
 namespace nb = nanobind;
 
+#define TEST_DIAMOND 1
+
+#if TEST_DIAMOND
 class A {
 public:
     A() = default;
     virtual ~A() = default;
     virtual int foo() const = 0;
 };
+#endif
 
-class B : virtual public A {
+#if TEST_DIAMOND
+class B : virtual public A
+#else
+class B
+#endif
+{
 public:
     B(int _a, int _b) : a(_a), b(_b) { }
-    int foo() const override { return a * b; }
+    virtual int foo() const /*override*/ { return a * b; }
     int a, b;
 };
 
-class C : virtual public A {
+#if TEST_DIAMOND
+class C : virtual public A
+#else
+class C
+#endif
+{
 public:
     C() = default;
     virtual int bar() const { return x * 42; }
@@ -31,21 +45,34 @@ NB_MODULE(testbed, m)
 {
     m.doc() = "Minimal working example for Nanobind";
 
+#if TEST_DIAMOND
     nb::class_<A>(m, "A").def("foo", &A::foo);
+#endif
 
+#if TEST_DIAMOND
     nb::class_<B, A>(m, "B")
+#else
+    nb::class_<B>(m, "B")
+#endif
         .def(nb::init<int, int>())
+        .def("foo", &B::foo)
         .def_rw("a", &B::a)
         .def_rw("b", &B::b);
 
-    nb::class_<C, A>(m, "C").def("bar", &C::bar).def_rw("x", &C::x);
+#if TEST_DIAMOND
+    nb::class_<C, A>(m, "C")
+#else
+    nb::class_<C>(m, "C")
+#endif
+        .def("bar", &C::bar)
+        .def_rw("x", &C::x);
 
     // NOTE: Nanobind does not support multiple inheritance, so this Pybind11
     // syntax does not work anymore.
     // nb::class_<D, B, C>(m, "D").def(nb::init<int, int>());
 
-    // Define D as if it was only a child of C and bind the inherited methods of
-    // B directly.
+    // Define D as if it were only a child of C and bind the inherited methods
+    // of B directly.
     nb::class_<D, C>(m, "D")
         .def(nb::init<int, int>())
         // Inherited from B

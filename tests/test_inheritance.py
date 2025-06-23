@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1] / "build")) # noqa
 
-from testbed import A, B, C, D
+from testbed import B, D
 
 def test_inheritance():
     b = B(1, 2)
