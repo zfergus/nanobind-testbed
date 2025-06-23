@@ -1,0 +1,72 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  Build:
+    name: ${{ matrix.name }} Python ${{ matrix.python-version }} ${{ matrix.config }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        config: [Debug, Release]
+        include:
+          - os: ubuntu-latest
+            name: Linux
+          - os: windows-latest
+            name: Windows
+          - os: macOS-latest
+            name: macOS
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4.0.0
+        with:
+          fetch-depth: 10
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5.1.1
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Install Ninja (only needed on Windows)
+      - name: Install Ninja
+        if: runner.os == 'Windows'
+        uses: seanmiddleditch/gha-setup-ninja@master
+
+      - name: Get number of CPU cores
+        uses: SimenB/github-actions-cpu-cores@v2.0.0
+        id: cpu-cores
+
+      - name: Configure (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=x64
+          cmake -G Ninja -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+
+      - name: Build (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cmake --build build -j ${{ steps.cpu-cores.outputs.count }}
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=x64
+          cmake --build build -j ${{ steps.cpu-cores.outputs.count }} && ccache --show-stats
+
+      - name: Tests
+        run: |
+          pip install nose2
+          nose2 -v --pretty-assert -s tests

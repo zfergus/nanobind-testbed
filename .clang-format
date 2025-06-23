@@ -1,0 +1,19 @@
+---
+Language: Cpp
+BasedOnStyle: WebKit
+AlignAfterOpenBracket: AlwaysBreak
+AlignTrailingComments:
+  Kind:            Always
+  OverEmptyLines:  0
+BinPackParameters: false
+BreakArrays: false
+BreakBeforeBinaryOperators: NonAssignment
+BreakStringLiterals: false
+ColumnLimit: 80
+CommentPragmas:  '^@.+'
+FixNamespaceComments: true
+# Regroup includes with a priority system
+IncludeBlocks: Regroup
+PackConstructorInitializers: CurrentLine
+RemoveEmptyLinesInUnwrappedLines: true
+SortIncludes: CaseInsensitive
