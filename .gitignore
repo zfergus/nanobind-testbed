@@ -492,7 +492,7 @@ CMakeUserPresets.json
 
 ## Build
 build/
-bin*
+# bin*
 
 ## IDES
 *.autosave
